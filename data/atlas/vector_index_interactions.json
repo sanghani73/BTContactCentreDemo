@@ -1,0 +1,24 @@
+{
+  "name": "vector_index_interactions",
+  "type": "vectorSearch",
+  "database": "bt_contact_centre",
+  "collectionName": "interactions",
+  "definition": {
+    "fields": [
+      {
+        "type": "autoEmbed",
+        "modality": "text",
+        "path": "interactionSummary",
+        "model": "voyage-4-large",
+        "numDimensions": 1024,
+        "similarity": "cosine",
+        "quantization": "scalar",
+        "indexingMethod": "hnsw"
+      },
+      { "type": "filter", "path": "uprn" },
+      { "type": "filter", "path": "brand" },
+      { "type": "filter", "path": "createdAt" },
+      { "type": "filter", "path": "intentCategory" }
+    ]
+  }
+}

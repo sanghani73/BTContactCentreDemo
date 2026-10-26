@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>BT Household Blindspot — MongoDB</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <style>
+    /* ----- MongoDB brand palette ---------------------------------------
+       Spring Green (primary)   #00ED64
+       Evergreen (dark)         #00684A
+       Mist (soft)              #C3F4D7
+       MongoDB Black            #001E2B
+       Gray/Dark 4              #112733
+       Gray/Dark 2              #3D4F58
+       Gray/Base                #889397
+       Gray/Light 1             #C1C7C6
+       Gray/Light 2             #E8EDEB
+       Blue/Light 1             #0498EC
+       Red/Base                 #DB3030
+       Yellow/Light             #FFEC9E
+    -------------------------------------------------------------------- */
+    :root {
+      --mdb-spring:   #00ED64;
+      --mdb-ever:    #00684A;
+      --mdb-mist:    #C3F4D7;
+      --mdb-black:   #001E2B;
+      --mdb-ink:     #112733;
+      --mdb-panel:   #16293A;
+      --mdb-slate:   #3D4F58;
+      --mdb-gray:    #889397;
+      --mdb-stone:   #C1C7C6;
+      --mdb-mint:    #E8EDEB;
+      --mdb-blue:    #0498EC;
+      --mdb-red:     #DB3030;
+      --mdb-yellow:  #FFEC9E;
+      --font-sans:   "Euclid Circular A", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono:   "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    }
+
+    .reveal {
+      font-family: var(--font-sans);
+      font-size: 32px;
+      color: var(--mdb-mint);
+      background: var(--mdb-black);
+    }
+    .reveal .slides { text-align: left; }
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      color: var(--mdb-mint);
+      text-transform: none;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5em;
+    }
+    .reveal h1 { font-size: 2.2em; line-height: 1.05; }
+    .reveal h2 { font-size: 1.5em; }
+    .reveal h3 { font-size: 1.1em; color: var(--mdb-spring); font-weight: 500; }
+    .reveal p, .reveal li { color: var(--mdb-mint); line-height: 1.45; }
+    .reveal ul, .reveal ol { margin: 0.4em 0 0 1.2em; }
+    .reveal li { margin-bottom: 0.35em; }
+    .reveal strong { color: var(--mdb-spring); font-weight: 600; }
+    .reveal em { color: var(--mdb-mist); font-style: normal; }
+    .reveal a { color: var(--mdb-blue); text-decoration: none; }
+    .reveal code {
+      font-family: var(--font-mono);
+      background: var(--mdb-ink);
+      color: var(--mdb-mist);
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+    .reveal section {
+      padding: 50px 60px;
+      height: 100%;
+    }
+
+    /* -- Component helpers --------------------------------------------- */
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.5em;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mdb-spring);
+      font-weight: 500;
+      border-bottom: 2px solid var(--mdb-spring);
+      padding-bottom: 4px;
+      margin-bottom: 1.3em;
+    }
+    .footer {
+      position: absolute;
+      bottom: 24px; left: 60px; right: 60px;
+      display: flex; justify-content: space-between;
+      color: var(--mdb-gray);
+      font-size: 0.42em;
+      letter-spacing: 0.06em;
+    }
+    .footer .leaf { color: var(--mdb-spring); font-weight: 600; }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.42em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .pill.good  { background: var(--mdb-spring); color: var(--mdb-black); }
+    .pill.ever  { background: var(--mdb-ever); color: var(--mdb-mint); }
+    .pill.warn  { background: var(--mdb-yellow); color: var(--mdb-black); }
+    .pill.ghost { background: transparent; color: var(--mdb-mist); border: 1px solid var(--mdb-slate); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .card {
+      background: var(--mdb-ink);
+      border: 1px solid var(--mdb-slate);
+      border-radius: 8px;
+      padding: 20px 22px;
+    }
+    .card h3 { margin-top: 0; }
+    .card .big {
+      display: block; font-size: 2.4em; color: var(--mdb-spring); font-weight: 600;
+      line-height: 1.1; margin-bottom: 4px;
+    }
+    .card .caption { color: var(--mdb-stone); font-size: 0.6em; margin-top: 4px; }
+
+    /* -- Comparison table --------------------------------------------- */
+    .cmp {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.6em;
+    }
+    .cmp th, .cmp td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--mdb-slate);
+      text-align: left; vertical-align: top;
+    }
+    .cmp th {
+      color: var(--mdb-gray);
+      font-weight: 500; font-size: 0.9em;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .cmp td.col-us { color: var(--mdb-spring); font-weight: 500; }
+    .cmp td.col-them { color: var(--mdb-stone); }
+
+    /* -- Latency budget block ----------------------------------------- */
+    .latency {
+      font-family: var(--font-mono);
+      font-size: 0.6em;
+      background: var(--mdb-ink);
+      border-left: 3px solid var(--mdb-spring);
+      padding: 18px 22px;
+      border-radius: 4px;
+    }
+    .latency .row { display: grid; grid-template-columns: 1fr 110px 110px; gap: 12px; }
+    .latency .row.head { color: var(--mdb-gray); border-bottom: 1px solid var(--mdb-slate); padding-bottom: 6px; margin-bottom: 8px; }
+    .latency .row .ms { text-align: right; color: var(--mdb-spring); }
+    .latency .row.total { margin-top: 10px; border-top: 1px solid var(--mdb-slate); padding-top: 8px; font-weight: 600; }
+
+    /* -- Cover slide -------------------------------------------------- */
+    .reveal section.cover {
+      background: radial-gradient(circle at 30% 60%, #003524 0%, var(--mdb-black) 60%);
+      padding: 0;
+    }
+    .cover-stack {
+      min-height: 720px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 100px;
+      box-sizing: border-box;
+    }
+    .cover h1 {
+      font-size: 2.8em; line-height: 1.02; max-width: 15ch;
+    }
+    .cover .lede { color: var(--mdb-mist); font-size: 0.85em; max-width: 30ch; margin-top: 20px; }
+    .cover .brands {
+      display: flex; gap: 14px; margin-top: 32px;
+      font-size: 0.5em; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mdb-gray);
+    }
+    .cover .brands span.bt { color: #5BC0F8; }
+    .cover .brands span.ee { color: #FDD835; }
+    .cover .brands span.pn { color: #00B7EB; }
+    .cover .brands span.mdb { color: var(--mdb-spring); }
+
+    /* -- Architecture SVG box ----------------------------------------- */
+    .arch { width: 100%; height: auto; }
+    .arch text { font-family: var(--font-sans); fill: var(--mdb-mint); font-size: 14px; }
+    .arch rect.layer { fill: var(--mdb-ink); stroke: var(--mdb-slate); }
+    .arch rect.layer.center { stroke: var(--mdb-spring); }
+    .arch rect.pill { fill: var(--mdb-panel); stroke: var(--mdb-ever); }
+    .arch line, .arch path.arrow { stroke: var(--mdb-spring); stroke-width: 1.5; fill: none; }
+    .arch text.title { fill: var(--mdb-spring); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* -- Timeline for demo scenario slide ----------------------------- */
+    .tl { display: grid; grid-template-columns: 90px 1fr; row-gap: 10px; column-gap: 20px; font-size: 0.6em; }
+    .tl .when { color: var(--mdb-gray); font-family: var(--font-mono); }
+    .tl .evt { color: var(--mdb-mist); }
+    .tl .evt.current { color: var(--mdb-spring); font-weight: 600; }
+
+    .footnote {
+      font-size: 0.5em; color: var(--mdb-gray); margin-top: 20px;
+    }
+
+    .reveal .progress { color: var(--mdb-spring); }
+    .reveal .controls { color: var(--mdb-mist); }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- 1. COVER -->
+    <section class="cover">
+      <div class="cover-stack">
+        <span class="eyebrow">For BT Group Consumer &amp; Technology Leadership</span>
+        <h2>Unifying the Multi-Brand Household.</h2>
+        <p class="lede">
+          A real-time Operational Customer 360 and predictive contact-centre
+          intelligence layer — built on BT's existing MongoDB footprint.
+        </p>
+        <div class="brands">
+          <span class="bt">BT</span>·<span class="ee">EE</span>·<span class="pn">Plusnet</span>
+          <span style="color:var(--mdb-gray)">→</span>
+          <span class="mdb">MongoDB Atlas</span>
+        </div>
+      </div>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Architecture &amp; CX Innovation</span>
+        <!-- <span>Confidential — BT internal</span> -->
+      </div>
+    </section>
+
+    <!-- 2. THE PROBLEM -->
+    <section>
+      <span class="eyebrow">The problem</span>
+      <h2>The household blindspot costs you AHT, NPS, and conversion.</h2>
+      <div class="grid-3" style="margin-top: 24px;">
+        <div class="card">
+          <h3>Fragmented brand silos</h3>
+          <p style="font-size:0.65em">Sarah has EE Mobile; her partner Mark holds the BT broadband. Neither system
+             recognises the shared address.</p>
+        </div>
+        <div class="card">
+          <h3>Contact-centre penalty</h3>
+          <p style="font-size:0.65em">Agents see <em>"No BT Account"</em>. AHT inflates while the caller verifies
+             credentials they do not hold.</p>
+        </div>
+        <div class="card">
+          <h3>Broken omnichannel</h3>
+          <p style="font-size:0.65em">Customers drop off the self-service journey, call in — and the agent has zero
+             visibility into what just happened in the app.</p>
+        </div>
+      </div>
+      <p class="footnote">Tens of thousands of daily cross-brand household calls begin with the
+         agent unable to see the full picture.</p>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  The household blindspot</span>
+        <span>02 / 11</span>
+      </div>
+    </section>
+
+    <!-- 3. STRATEGIC SHIFT -->
+    <section>
+      <span class="eyebrow">Strategic shift</span>
+      <h2>Analytical Customer 360 vs. <em>Operational</em> Customer 360.</h2>
+      <p style="font-size:0.75em; color: var(--mdb-stone); margin-top: 0;">
+        Analytical 360s live in cold data warehouses. Agents need an operational
+        360 that answers while the phone is ringing.
+      </p>
+      <table class="cmp" style="margin-top: 20px;">
+        <thead>
+          <tr><th>Capability</th><th>Traditional data warehouse</th><th>MongoDB Atlas ODL</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Query latency</td><td class="col-them">5–30 s (batch)</td><td class="col-us">Single-digit ms</td></tr>
+          <tr><td>Data freshness</td><td class="col-them">T + 24 h (ETL)</td><td class="col-us">Real-time (change streams)</td></tr>
+          <tr><td>Household graph</td><td class="col-them">Rigid joins</td><td class="col-us">Native flexible documents</td></tr>
+          <tr><td>Unstructured search</td><td class="col-them">Keyword only</td><td class="col-us">Hybrid: BM25 + vector</td></tr>
+          <tr><td>Agent actionability</td><td class="col-them">Static reports</td><td class="col-us">Predictive screen pop</td></tr>
+        </tbody>
+      </table>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Analytical vs operational</span>
+        <span>03 / 11</span>
+      </div>
+    </section>
+
+    <!-- 4. SOLUTION ARCHITECTURE -->
+    <section>
+      <span class="eyebrow">Solution architecture</span>
+      <h2>Evolve Profile Hub &amp; Service Hub into an operational data layer.</h2>
+      <svg class="arch" viewBox="0 0 1200 420" xmlns="http://www.w3.org/2000/svg" style="margin-top:12px">
+        <!-- Left: upstream -->
+        <text class="title" x="40" y="34">Upstream</text>
+        <rect class="layer" x="30" y="48" width="220" height="340" rx="8"/>
+        <rect class="pill" x="50" y="78" width="180" height="46" rx="6"/>
+        <text x="140" y="106" text-anchor="middle">BT Broadband CRM</text>
+        <rect class="pill" x="50" y="138" width="180" height="46" rx="6"/>
+        <text x="140" y="166" text-anchor="middle">EE Mobile Billing</text>
+        <rect class="pill" x="50" y="198" width="180" height="46" rx="6"/>
+        <text x="140" y="226" text-anchor="middle">Openreach WFM</text>
+        <rect class="pill" x="50" y="258" width="180" height="46" rx="6"/>
+        <text x="140" y="286" text-anchor="middle">Plusnet Billing</text>
+        <rect class="pill" x="50" y="318" width="180" height="46" rx="6"/>
+        <text x="140" y="346" text-anchor="middle">MyEE / BT.com apps</text>
+
+        <!-- Center: Atlas -->
+        <text class="title" x="340" y="34">MongoDB Atlas · Operational Data Layer</text>
+        <rect class="layer center" x="330" y="48" width="540" height="340" rx="8"/>
+        <rect class="pill" x="360" y="80" width="220" height="40" rx="6"/>
+        <text x="470" y="106" text-anchor="middle">profiles  ·  premises</text>
+        <rect class="pill" x="620" y="80" width="220" height="40" rx="6"/>
+        <text x="730" y="106" text-anchor="middle">interactions  ·  orders  ·  wfm</text>
+        <rect class="pill" x="360" y="140" width="480" height="40" rx="6"/>
+        <text x="600" y="166" text-anchor="middle">Change Streams → materialized customer_360 (sub-3 ms fetch)</text>
+        <rect class="pill" x="360" y="200" width="480" height="40" rx="6"/>
+        <text x="600" y="226" text-anchor="middle">Atlas Search (BM25)  +  Atlas Vector Search</text>
+        <rect class="pill" x="360" y="260" width="480" height="40" rx="6"/>
+        <text x="600" y="286" text-anchor="middle" style="fill:var(--mdb-spring);font-weight:600">
+          $rankFusion  —  native hybrid search</text>
+        <rect class="pill" x="360" y="320" width="480" height="40" rx="6"/>
+        <text x="600" y="346" text-anchor="middle">Voyage AI auto-embedding  (voyage-4-large, GA)</text>
+
+        <!-- Right: downstream -->
+        <text class="title" x="950" y="34">Downstream</text>
+        <rect class="layer" x="940" y="48" width="220" height="340" rx="8"/>
+        <rect class="pill" x="960" y="100" width="180" height="60" rx="6"/>
+        <text x="1050" y="128" text-anchor="middle">Agent desktop</text>
+        <text x="1050" y="148" text-anchor="middle" style="font-size:11px;fill:var(--mdb-stone)">Predictive screen pop</text>
+        <rect class="pill" x="960" y="180" width="180" height="60" rx="6"/>
+        <text x="1050" y="208" text-anchor="middle">IVR intent routing</text>
+        <text x="1050" y="228" text-anchor="middle" style="font-size:11px;fill:var(--mdb-stone)">Context-aware queue</text>
+        <rect class="pill" x="960" y="260" width="180" height="60" rx="6"/>
+        <text x="1050" y="288" text-anchor="middle">EE One recommender</text>
+        <text x="1050" y="308" text-anchor="middle" style="font-size:11px;fill:var(--mdb-stone)">Converged household</text>
+
+        <!-- Arrows -->
+        <path class="arrow" d="M250 215 L330 215" marker-end="url(#arr)"/>
+        <path class="arrow" d="M870 215 L940 215" marker-end="url(#arr)"/>
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--mdb-spring)"/>
+          </marker>
+        </defs>
+      </svg>
+      <p class="footnote">BT already trusts MongoDB for Profile Hub and Service Hub.
+         This is an extension of what you run today, not a rip-and-replace.</p>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Solution architecture</span>
+        <span>04 / 11</span>
+      </div>
+    </section>
+
+    <!-- 5. DATA MODEL IN PLAY -->
+    <section>
+      <span class="eyebrow">The data model in play</span>
+      <h2>Six collections. One document per household on the hot path.</h2>
+      <div class="grid-3" style="margin-top:20px">
+        <div class="card">
+          <h3>profiles</h3>
+          <p style="font-size:0.55em">
+            Identity &amp; relationship records across <strong>BT, EE, Plusnet</strong>.
+            Carries the <code>relationships[]</code> graph (partner / guarantor / carer)
+            and recorded consent for cross-brand linkage.
+          </p>
+        </div>
+        <div class="card">
+          <h3>premises</h3>
+          <p style="font-size:0.55em">
+            UK <strong>UPRN-keyed</strong> addresses and line topology
+            (ONT serial, exchange, FTTP vs FTTC, current line status). The
+            household anchor every other document joins on.
+          </p>
+        </div>
+        <div class="card">
+          <h3>interactions</h3>
+          <p style="font-size:0.55em">
+            The <strong>Service Hub</strong>: voice, webchat, mobile-app events.
+            <code>interactionSummary</code> is <strong>auto-embedded</strong> by Atlas
+            via Voyage AI — no app-side pipeline.
+          </p>
+        </div>
+        <div class="card">
+          <h3>operations_wfm</h3>
+          <p style="font-size:0.55em">
+            Live field-service state: Openreach engineer dispatches, revised ETAs,
+            delay reasons. Change-stream-driven so the agent sees the
+            <em>current</em> status, not yesterday's snapshot.
+          </p>
+        </div>
+        <div class="card">
+          <h3>orders</h3>
+          <p style="font-size:0.55em">
+            Provisioning, migration, hardware shipments.
+            Carries DPD / courier exceptions so damaged-router cases surface on
+            the pop before the caller mentions them.
+          </p>
+        </div>
+        <div class="card" style="border-color: var(--mdb-spring)">
+          <h3>customer_360 <span class="pill good">materialized</span></h3>
+          <p style="font-size:0.55em">
+            A pre-joined, read-optimised dossier per <code>UPRN</code>,
+            maintained by MongoDB <strong>change streams</strong>.
+            Single-key fetch at call-connect — sub-3 ms.
+          </p>
+        </div>
+      </div>
+      <p class="footnote">
+        This demo uses synthetic data; the production solution would follow
+        the same domain model, mapped to BT's existing Profile Hub, Service
+        Hub and operational systems.
+      </p>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Data model in play</span>
+        <span>05 / 11</span>
+      </div>
+    </section>
+
+    <!-- 6. DEMO SCENARIO INTRO -->
+    <section>
+      <span class="eyebrow">Live demo</span>
+      <h2>Sarah Jenkins calls BT about her partner's broadband.</h2>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="card">
+          <h3>The caller</h3>
+          <p style="font-size:0.65em">
+            <strong>Sarah Jenkins</strong>, EE mobile customer.<br>
+            Calls BT from <code>+44 7700 900123</code>.<br>
+            Her partner <strong>Mark Davis</strong> holds the BT broadband account at the
+            same premise (<code>UPRN 100021489211</code>).
+          </p>
+        </div>
+        <div class="card">
+          <h3>What has already happened</h3>
+          <div class="tl">
+            <span class="when">Yesterday 16:15</span><span class="evt">Mark · webchat — LOS fault raised</span>
+            <span class="when">Yesterday 17:40</span><span class="evt">WFM — Openreach engineer booked</span>
+            <span class="when">Today 08:00</span><span class="evt">WFM — engineer dispatched</span>
+            <span class="when">Today 12:45</span><span class="evt">Sarah · MyEE app — drop-off at line check</span>
+            <span class="when">Today 13:00</span><span class="evt">WFM — engineer <em>DELAYED</em>, new ETA 13:45</span>
+            <span class="when">Today 13:00</span><span class="evt current">Sarah calls BT (now)</span>
+          </div>
+        </div>
+      </div>
+      <p class="footnote">Watch how the agent sees the whole household — digital and voice — before saying "hello".</p>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Live demo</span>
+        <span>06 / 11</span>
+      </div>
+    </section>
+
+    <!-- 7. TECHNICAL ENGINE -->
+    <section>
+      <span class="eyebrow">Under the hood</span>
+      <h2>Four coordinated stages. One agentic. Sub-second budget.</h2>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="latency">
+          <div class="row head"><span>Stage</span><span class="ms">p50</span><span class="ms">p95</span></div>
+          <div class="row"><span>Agent 1 — CLI + C360 fetch</span><span class="ms">3 ms</span><span class="ms">7 ms</span></div>
+          <div class="row"><span>Agent 2 — household expand</span><span class="ms">2 ms</span><span class="ms">5 ms</span></div>
+          <div class="row"><span>Agent 3 — $rankFusion hybrid</span><span class="ms">230 ms</span><span class="ms">380 ms</span></div>
+          <div class="row"><span>Agent 4 — LLM first token</span><span class="ms">500 ms</span><span class="ms">900 ms</span></div>
+          <div class="row"><span>Agent 4 — briefing complete</span><span class="ms">1 400 ms</span><span class="ms">2 400 ms</span></div>
+          <div class="row total"><span>Total to actionable pop</span><span class="ms">1 635 ms</span><span class="ms">2 792 ms</span></div>
+        </div>
+        <div>
+          <h3>Core innovations</h3>
+          <ul style="font-size:0.65em">
+            <li><strong>$rankFusion</strong> — one aggregation, two sub-pipelines (semantic + keyword),
+                scoreDetails explains every hit to the agent.</li>
+            <li><strong>Voyage AI auto-embedding (GA)</strong> — summaries embed on write,
+                utterances embed on query. No app-side pipeline.</li>
+            <li><strong>Progressive UI</strong> — caller + timeline + dossier appear in &lt; 1 s;
+                script streams token-by-token.</li>
+            <li><strong>Grounded output</strong> — schema-validated briefing; every claim cites
+                a specific interaction / order / work-order ID.</li>
+            <li><strong>Closed loop</strong> — the current call writes back as a new interaction,
+                auto-embedded, retrievable next time.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footnote" style="margin-top:18px">
+        <span class="pill ghost">Indicative</span>
+        &nbsp;Latency figures are <strong>expected ranges</strong> for this demo on an
+        M-tier Atlas cluster with search nodes and Grove-fronted Haiku. Production
+        numbers depend on cluster size, call volume and model choice.
+      </p>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Technical engine</span>
+        <span>07 / 11</span>
+      </div>
+    </section>
+
+    <!-- 8. WHY MONGODB -->
+    <section>
+      <span class="eyebrow">Why MongoDB</span>
+      <h2>One platform, not three stitched together.</h2>
+      <table class="cmp" style="margin-top:12px">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Elastic + Postgres + Redis</th>
+            <th>Graph DB (Neo4j)</th>
+            <th>MongoDB Atlas ODL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Household linkage</td>
+            <td class="col-them">Joins across stores at query</td>
+            <td class="col-them">First-class, strongest</td>
+            <td class="col-us">Flexible embedded + ref model</td>
+          </tr>
+          <tr>
+            <td>Keyword &amp; semantic search</td>
+            <td class="col-them">Two systems, two pipelines</td>
+            <td class="col-them">External search add-on</td>
+            <td class="col-us">Single platform — <code>$rankFusion</code></td>
+          </tr>
+          <tr>
+            <td>Auto-embedding</td>
+            <td class="col-them">DIY embedding service</td>
+            <td class="col-them">DIY</td>
+            <td class="col-us"><strong>GA</strong> with Voyage AI</td>
+          </tr>
+          <tr>
+            <td>Real-time materialization</td>
+            <td class="col-them">Debezium + Kafka + Redis</td>
+            <td class="col-them">Trigger plugins</td>
+            <td class="col-us">Native change streams</td>
+          </tr>
+          <tr>
+            <td>Document flexibility</td>
+            <td class="col-them">Schema per store</td>
+            <td class="col-them">Node/edge rigidity</td>
+            <td class="col-us">Native (brand-specific fields)</td>
+          </tr>
+          <tr>
+            <td>BT incumbent footprint</td>
+            <td class="col-them">Partial</td>
+            <td class="col-them">None</td>
+            <td class="col-us">Profile Hub + Service Hub</td>
+          </tr>
+          <tr>
+            <td>Vendors on the hot path</td>
+            <td class="col-them">3+</td>
+            <td class="col-them">2+</td>
+            <td class="col-us">1</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Why MongoDB</span>
+        <span>08 / 11</span>
+      </div>
+    </section>
+
+    <!-- 9. BUSINESS CASE -->
+    <section>
+      <span class="eyebrow">Business case &nbsp;·&nbsp; demo-scoped</span>
+      <h2>Lower cost to serve. Higher NPS. New convergence revenue.</h2>
+      <p style="font-size:0.65em; color: var(--mdb-stone); margin:4px 0 18px">
+        <span class="pill ghost">Hypothetical</span>
+        &nbsp;Figures below are <strong>illustrative</strong>, derived from the
+        architecture and flow of this specific demo. Real numbers depend on BT's
+        own call-volume, retention policy and tenant sizing.
+      </p>
+      <div class="grid-3">
+        <div class="card">
+          <span class="big">−90 s</span>
+          <span class="caption">Example AHT reduction on cross-brand household calls (illustrative).</span>
+        </div>
+        <div class="card">
+          <span class="big">0</span>
+          <span class="caption">Credential-verification loops when the account is in a partner's name.</span>
+        </div>
+        <div class="card">
+          <span class="big">+1</span>
+          <span class="caption">EE One convergence opportunity surfaced per converged household call.</span>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:28px">
+        <div>
+          <h3>Indicative run cost · 1 M calls / month</h3>
+          <table class="cmp" style="margin-top:4px; font-size:0.55em">
+            <tbody>
+              <tr><td>Voyage AI auto-embed (write + query)</td><td class="col-us">≈ £1.5–2.5 k</td></tr>
+              <tr><td>Atlas Search + Vector Search (M40 / M60)</td><td class="col-us">≈ £3–5 k</td></tr>
+              <tr><td>LLM briefing (Agent 4)</td><td class="col-us">≈ £3–8 k</td></tr>
+              <tr><td><strong>Total</strong></td><td class="col-us"><strong>≈ £8–15 k / month</strong></td></tr>
+            </tbody>
+          </table>
+          <p class="footnote" style="margin-top:6px">
+            Scoped to this demo's architecture. The same platform supports many more journeys.
+          </p>
+        </div>
+        <div class="card" style="border-color: var(--mdb-ever)">
+          <h3>Other BT journeys this same platform unlocks</h3>
+          <ul style="font-size:0.55em; margin-top:4px">
+            <li><strong>Field-engineer app</strong> — real-time household context on arrival; prior interactions &amp; related orders surfaced on site.</li>
+            <li><strong>Retention &amp; collections</strong> — operational 360 for save-desk teams with vector-matched prior save offers.</li>
+            <li><strong>Digital self-service</strong> — same hybrid search powers in-app help; drop-offs become retrievable context on next contact.</li>
+            <li><strong>Fraud &amp; identity</strong> — household graph + behavioural signals, same change-stream pipeline.</li>
+            <li><strong>Workforce routing</strong> — intent routing from IVR utterance to the right skill queue, in milliseconds.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Business case</span>
+        <span>09 / 11</span>
+      </div>
+    </section>
+
+    <!-- 10. ROADMAP -->
+    <section>
+      <span class="eyebrow">Roadmap &nbsp;·&nbsp; one example path</span>
+      <h2>Phased delivery. No rip-and-replace.</h2>
+      <p style="font-size:0.65em; color: var(--mdb-stone); margin:4px 0 14px">
+        <span class="pill ghost">Illustrative</span>
+        &nbsp;One example of how we would approach this challenge. The phasing
+        and sequencing would be shaped by BT's own priorities, operational
+        constraints and governance.
+      </p>
+      <div class="grid-2" style="margin-top:4px">
+        <div class="card">
+          <h3>Phase 1 — Prototype validation</h3>
+          <p style="font-size:0.6em">Sub-second multi-stage synthesis using Atlas, <code>$rankFusion</code>,
+             <code>voyage-4-large</code> auto-embedding. <span class="pill good">Done today</span></p>
+        </div>
+        <div class="card">
+          <h3>Phase 2 — Premise Hub linking</h3>
+          <p style="font-size:0.6em">UPRN keys across Profile Hub and Service Hub.
+             Related-party links with recorded consent.</p>
+        </div>
+        <div class="card">
+          <h3>Phase 3 — Pilot agent assist</h3>
+          <p style="font-size:0.6em">Predictive briefings on the highest-volume broadband queues.
+             Post-call write-back closes the loop.</p>
+        </div>
+        <div class="card">
+          <h3>Phase 4 — Atlas-native materialization</h3>
+          <p style="font-size:0.6em">Move the C360 materializer to Atlas Triggers / Stream Processing —
+             zero new services for BT SRE to run.</p>
+        </div>
+        <div class="card">
+          <h3>Phase 5 — Convergence integration</h3>
+          <p style="font-size:0.6em">Automated EE One eligibility rules for proactive cross-brand offers
+             on live calls.</p>
+        </div>
+        <div class="card">
+          <h3>Phase 6 — Enterprise hardening</h3>
+          <p style="font-size:0.6em">GDPR / consent framework, Queryable Encryption on phone numbers,
+             OTel observability, SRE runbooks.</p>
+        </div>
+      </div>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Roadmap</span>
+        <span>10 / 11</span>
+      </div>
+    </section>
+
+    <!-- 11. THANK YOU -->
+    <section class="cover">
+      <div class="cover-stack">
+        <span class="eyebrow">Thank you</span>
+        <h1>Any questions?</h1>
+        <div class="brands" style="margin-top:40px">
+          <span class="mdb">MongoDB</span>
+          <span style="color:var(--mdb-gray)">·</span>
+          <span>Architecture &amp; Customer Experience Innovation</span>
+        </div>
+      </div>
+      <div class="footer">
+        <span><span class="leaf">MongoDB</span>  ·  Q&amp;A</span>
+        <span>11 / 11</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: false,
+    controls: true,
+    progress: true,
+    center: false,
+    transition: "slide",
+    width: 1280,
+    height: 800,
+    margin: 0.04,
+  });
+</script>
+</body>
+</html>

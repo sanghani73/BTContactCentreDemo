@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>BT Group Unified Agent Assistant</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">BT GROUP UNIFIED AGENT ASSISTANT</div>
+    <div class="agent-tag">Agent: Exeter Contact Centre</div>
+    <a class="deck-link" href="/static/deck.html" target="_blank" rel="noopener">Open pitch deck ↗</a>
+    <div id="mode-pill" class="mode-pill">loading…</div>
+  </header>
+
+  <main class="split">
+    <!-- LEFT: IVR simulator + telemetry -->
+    <section class="panel left" data-annotate>
+      <h2>IVR Simulator &amp; Control Panel</h2>
+
+      <label>Scenario</label>
+      <select id="scenario-select"></select>
+
+      <label>Utterance</label>
+      <textarea id="utterance" rows="4"></textarea>
+
+      <div class="row">
+        <button id="run-btn">Trigger Inbound Call</button>
+      </div>
+
+      <h3>Latency Telemetry</h3>
+      <table id="telemetry" class="metrics">
+        <thead>
+          <tr><th>Stage</th><th>ms</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h3>Hybrid Search Trace</h3>
+      <div id="trace" class="trace"></div>
+    </section>
+
+    <!-- RIGHT: predictive pop + timeline + dossier -->
+    <section class="panel right">
+      <div class="card" id="caller-card">
+        <button class="help-btn" type="button" aria-label="Explain this card">?</button>
+        <h3>Caller Identified</h3>
+        <div id="caller-body" class="muted">No call yet.</div>
+        <div class="explain">
+          <button class="explain-close" type="button" aria-label="Close">×</button>
+          <div class="explain-title">Agent 1 · Identity</div>
+          <p><strong>Identity resolver.</strong> The inbound number is looked up
+             in the <code>profiles</code> collection. If the number is withheld
+             or unknown, <strong>Atlas Search</strong> matches the caller's
+             spoken name, address and brand against the <code>premises</code>
+             collection — autocomplete with postcode and brand-hint boosting.</p>
+        </div>
+      </div>
+
+      <div class="card" id="driver-card">
+        <button class="help-btn" type="button" aria-label="Explain this card">?</button>
+        <h3>Predictive Call Driver <span id="confidence" class="pill"></span></h3>
+        <div id="driver-body" class="muted">–</div>
+        <div class="explain">
+          <button class="explain-close" type="button" aria-label="Close">×</button>
+          <div class="explain-title">AI Agent · Call driver</div>
+          <p><strong>Grounded inference.</strong> An AI Agent reads the
+             retrieved context — caller, household, recent interactions, live
+             field service — and infers the most likely reason for the call.
+             Output is <strong>schema-enforced</strong>; every claim must cite
+             a specific interaction or work-order ID so the AI can't invent facts.</p>
+        </div>
+      </div>
+
+      <div class="card" id="timeline-card">
+        <button class="help-btn" type="button" aria-label="Explain this card">?</button>
+        <h3>Unified Household Timeline (last 7 days)</h3>
+        <ol id="timeline"></ol>
+        <div class="explain">
+          <button class="explain-close" type="button" aria-label="Close">×</button>
+          <div class="explain-title">Household timeline</div>
+          <p><strong>Every touchpoint across every channel.</strong> A
+             chronological view of this household's last 7 days — self-service,
+             webchat, voice, field-engineer visits, orders — assembled in a
+             single read. No stitching while the call is ringing.</p>
+          <p class="index-note">Compound index backing the sort:<br>
+            <code>interactions { uprn: 1, createdAt: -1 }</code></p>
+        </div>
+      </div>
+
+      <div class="card" id="script-card">
+        <button class="help-btn" type="button" aria-label="Explain this card">?</button>
+        <h3>Recommended Script</h3>
+        <blockquote id="script"></blockquote>
+        <div class="explain">
+          <button class="explain-close" type="button" aria-label="Close">×</button>
+          <div class="explain-title">AI Agent · Opening line</div>
+          <p><strong>Streamed, verbatim-safe.</strong> The exact words the
+             operator can read. The AI Agent writes them in real-time — you see
+             each word as it's generated. Every phrase is grounded in the
+             interactions and work-orders retrieved for this call.</p>
+        </div>
+      </div>
+
+      <div class="card" id="dossier-card">
+        <button class="help-btn" type="button" aria-label="Explain this card">?</button>
+        <h3>Household 360 Dossier</h3>
+        <div id="dossier"></div>
+        <div class="explain">
+          <button class="explain-close" type="button" aria-label="Close">×</button>
+          <div class="explain-title">Household dossier</div>
+          <p><strong>Everything we know, in one place.</strong> Who lives here,
+             what services they have, which equipment is installed, whether
+             they're eligible for cross-brand bundling. Kept in sync with every
+             source system in real-time so the agent always sees the current
+             picture.</p>
+          <p class="index-note">Compound indexes feeding the materializer:<br>
+            <code>interactions { uprn: 1, createdAt: -1 }</code><br>
+            <code>operations_wfm { uprn: 1, updatedAt: -1 }</code><br>
+            <code>orders { uprn: 1, status: 1, createdAt: -1 }</code></p>
+        </div>
+      </div>
+
+      <div class="card" id="writeback-card">
+        <button class="help-btn" type="button" aria-label="Explain this card">?</button>
+        <h3>Post-Call Write-Back (closes the loop)</h3>
+        <div id="writeback" class="muted">The current call will be written back as a
+        new interaction and auto-embedded by Atlas on wrap-up.</div>
+        <div class="explain">
+          <button class="explain-close" type="button" aria-label="Close">×</button>
+          <div class="explain-title">db.interactions.insertOne</div>
+          <p><strong>Closing the loop.</strong> When the call ends, the
+             resolution notes are written back as a new
+             <code>interactions</code> document. The platform
+             <strong>automatically indexes it for semantic search</strong> on
+             insert — so tomorrow's call for this household retrieves this
+             conversation the same way we retrieved yesterday's webchat today.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

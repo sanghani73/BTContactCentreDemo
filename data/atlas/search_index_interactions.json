@@ -1,0 +1,22 @@
+{
+  "name": "search_index_interactions",
+  "type": "search",
+  "database": "bt_contact_centre",
+  "collectionName": "interactions",
+  "definition": {
+    "mappings": {
+      "dynamic": false,
+      "fields": {
+        "interactionSummary": [
+          { "type": "string", "analyzer": "lucene.english" }
+        ],
+        "entities.orderReferences":     { "type": "token" },
+        "entities.workOrderReferences": { "type": "token" },
+        "entities.serviceReferences":   { "type": "token" },
+        "uprn":      { "type": "token" },
+        "brand":     { "type": "token" },
+        "createdAt": { "type": "date" }
+      }
+    }
+  }
+}

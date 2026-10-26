@@ -1,0 +1,24 @@
+{
+  "name": "search_index_premises",
+  "type": "search",
+  "database": "bt_contact_centre",
+  "collectionName": "premises",
+  "definition": {
+    "mappings": {
+      "dynamic": false,
+      "fields": {
+        "address.thoroughfareName": [
+          {
+            "type": "autocomplete",
+            "tokenization": "edgeGram",
+            "minGrams": 3,
+            "maxGrams": 15
+          }
+        ],
+        "address.postTown": { "type": "string" },
+        "address.postcode": { "type": "token" },
+        "uprn":             { "type": "token" }
+      }
+    }
+  }
+}
