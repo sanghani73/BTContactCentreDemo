@@ -55,9 +55,14 @@ def _extract_identity(utterance: str) -> dict[str, Any]:
 
     brand_hint: Optional[str] = None
     for key, brand in _BRAND_HINTS.items():
-        if key in low:
-            brand_hint = brand
-            break
+        if " " in key:
+            if key in low:
+                brand_hint = brand
+                break
+        else:
+            if re.search(rf"\b{re.escape(key)}\b", low):
+                brand_hint = brand
+                break
 
     return {
         "firstName": first_name,
@@ -97,9 +102,9 @@ async def _premise_search(tokens: str) -> list[dict[str, Any]]:
                 "minimumShouldMatch": 1,
             },
         }},
-        {"$limit": 5},
+        {"$limit": 20},
     ]
-    return await db.premises.aggregate(pipeline).to_list(5)
+    return await db.premises.aggregate(pipeline).to_list(20)
 
 
 async def _disambiguate(

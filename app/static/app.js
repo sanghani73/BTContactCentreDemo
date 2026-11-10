@@ -217,12 +217,18 @@ ${details}
     scenarioSelect.innerHTML = scenarios.map(s =>
       `<option value="${s.id}">${s.label}</option>`
     ).join("");
+    const showDesc = () => {
+      const s = scenarios.find(x => x.id === scenarioSelect.value);
+      el("scenario-desc").textContent = s?.description || "";
+    };
     scenarioSelect.addEventListener("change", () => {
       const s = scenarios.find(x => x.id === scenarioSelect.value);
       if (s) utterance.value = s.utterance;
+      showDesc();
       clearResults();
     });
     utterance.value = scenarios[0].utterance;
+    showDesc();
     const pill = el("mode-pill");
     const bits = [];
     bits.push(data.mockMode ? "mock-mongo" : "atlas");

@@ -3,12 +3,18 @@ without a MongoDB Atlas cluster. Mirrors the shapes in the spec Section 3."""
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+
+_NOW = datetime.now(timezone.utc)
 
 
 def _ts(iso: str) -> datetime:
     return datetime.fromisoformat(iso.replace("Z", "+00:00"))
+
+
+def _ago(**kwargs) -> datetime:
+    return _NOW - timedelta(**kwargs)
 
 
 PROFILES: list[dict[str, Any]] = [
@@ -29,7 +35,7 @@ PROFILES: list[dict[str, Any]] = [
              "plan": "Unlimited All-Rounder 5G", "status": "ACTIVE"},
         ],
         "consent": {"crossBrandLinkage": True,
-                    "lastReviewedAt": _ts("2026-09-01T00:00:00Z")},
+                    "lastReviewedAt": _ago(days=60)},
     },
     {
         "_id": "prof_bt_44102",
@@ -48,7 +54,7 @@ PROFILES: list[dict[str, Any]] = [
              "plan": "Full Fibre 900 Halo 3", "status": "FAULT_REPORTED"},
         ],
         "consent": {"crossBrandLinkage": True,
-                    "lastReviewedAt": _ts("2026-09-01T00:00:00Z")},
+                    "lastReviewedAt": _ago(days=60)},
     },
     {
         "_id": "prof_pn_11871",
@@ -64,7 +70,7 @@ PROFILES: list[dict[str, Any]] = [
              "plan": "Plusnet Unlimited ADSL", "status": "CEASED"},
         ],
         "consent": {"crossBrandLinkage": True,
-                    "lastReviewedAt": _ts("2026-10-01T00:00:00Z")},
+                    "lastReviewedAt": _ago(days=40)},
     },
     {
         "_id": "prof_bt_55401",
@@ -83,7 +89,7 @@ PROFILES: list[dict[str, Any]] = [
              "plan": "Full Fibre 500", "status": "PROVISIONING"},
         ],
         "consent": {"crossBrandLinkage": True,
-                    "lastReviewedAt": _ts("2026-09-15T00:00:00Z")},
+                    "lastReviewedAt": _ago(days=55)},
     },
     {
         "_id": "prof_bt_55402",
@@ -99,7 +105,7 @@ PROFILES: list[dict[str, Any]] = [
         ],
         "products": [],
         "consent": {"crossBrandLinkage": True,
-                    "lastReviewedAt": _ts("2026-09-15T00:00:00Z")},
+                    "lastReviewedAt": _ago(days=55)},
     },
 ]
 
@@ -115,7 +121,7 @@ PREMISES: list[dict[str, Any]] = [
             "technology": "FTTP", "maxAvailableSpeed": "1000Mbps",
             "lineStatus": "OUTAGE_DETECTED",
         },
-        "updatedAt": _ts("2026-10-23T13:00:00Z"),
+        "updatedAt": _ago(hours=1),
     },
     {
         "uprn": "200039182341",
@@ -126,7 +132,7 @@ PREMISES: list[dict[str, Any]] = [
             "exchangeCode": "E-LEED-07", "technology": "FTTP",
             "maxAvailableSpeed": "1000Mbps", "lineStatus": "AWAITING_PROVISION",
         },
-        "updatedAt": _ts("2026-10-23T09:00:00Z"),
+        "updatedAt": _ago(hours=4),
     },
     {
         "uprn": "350018447722",
@@ -137,7 +143,7 @@ PREMISES: list[dict[str, Any]] = [
             "exchangeCode": "E-EDIN-02", "technology": "FTTP",
             "maxAvailableSpeed": "1000Mbps", "lineStatus": "PROVISIONING",
         },
-        "updatedAt": _ts("2026-10-25T07:00:00Z"),
+        "updatedAt": _ago(hours=2),
     },
     {
         "uprn": "350018447899",
@@ -145,7 +151,7 @@ PREMISES: list[dict[str, Any]] = [
                     "thoroughfareName": "Rose Crescent",
                     "postTown": "Edinburgh", "postcode": "EH3 7PP"},
         "networkInfrastructure": {},
-        "updatedAt": _ts("2026-09-10T00:00:00Z"),
+        "updatedAt": _ago(days=30),
     },
 ]
 
@@ -157,7 +163,7 @@ INTERACTIONS: list[dict[str, Any]] = [
         "profileId": "prof_bt_44102",
         "brand": "BT",
         "channel": "WEBCHAT",
-        "createdAt": _ts("2026-10-22T16:15:00Z"),
+        "createdAt": _ago(hours=20),
         "rawTranscript": "Customer reports steady purple light on Smart Hub ...",
         "interactionSummary": ("Mark reported a steady purple Smart Hub light. "
                                "LOS detected on the FTTP line. Field technician "
@@ -174,7 +180,7 @@ INTERACTIONS: list[dict[str, Any]] = [
         "profileId": "prof_ee_98214",
         "brand": "EE",
         "channel": "MOBILE_APP",
-        "createdAt": _ts("2026-10-23T12:45:00Z"),
+        "createdAt": _ago(hours=1, minutes=15),
         "rawTranscript": "Path: MyEE > Help > Broadband Status > Check Line ...",
         "interactionSummary": ("Customer Sarah Jenkins attempted broadband fault "
                                "self-service in the MyEE app. Abandoned the journey "
@@ -192,7 +198,7 @@ INTERACTIONS: list[dict[str, Any]] = [
         "profileId": "prof_pn_11871",
         "brand": "PLUSNET",
         "channel": "WEBCHAT",
-        "createdAt": _ts("2026-10-19T10:00:00Z"),
+        "createdAt": _ago(days=4),
         "rawTranscript": "...",
         "interactionSummary": ("David Patel confirmed his migration from Plusnet "
                                "ADSL to EE Full Fibre on 23/10. New router dispatched "
@@ -209,7 +215,7 @@ INTERACTIONS: list[dict[str, Any]] = [
         "profileId": "prof_bt_55401",
         "brand": "BT",
         "channel": "VOICE",
-        "createdAt": _ts("2026-10-24T18:30:00Z"),
+        "createdAt": _ago(hours=6),
         "rawTranscript": "...",
         "interactionSummary": ("Priya called to confirm her install slot and "
                                "sounded worried the engineer might not arrive on "
@@ -233,9 +239,9 @@ OPERATIONS_WFM: list[dict[str, Any]] = [
         "reference": "OR-2026-9921",
         "status": "DELAYED",
         "statusDetails": "Field tech delayed on overhead fibre splice. Revised ETA: 13:45.",
-        "scheduledWindow": {"start": _ts("2026-10-23T08:00:00Z"),
-                            "end": _ts("2026-10-23T13:00:00Z")},
-        "updatedAt": _ts("2026-10-23T12:55:00Z"),
+        "scheduledWindow": {"start": _ago(hours=5),
+                            "end": _ago(minutes=0)},
+        "updatedAt": _ago(minutes=5),
     },
     {
         "_id": "wfm_or_10044",
@@ -245,9 +251,9 @@ OPERATIONS_WFM: list[dict[str, Any]] = [
         "reference": "OR-2026-10044",
         "status": "IN_TRANSIT",
         "statusDetails": "Engineer en route. ETA 11:20.",
-        "scheduledWindow": {"start": _ts("2026-10-25T10:00:00Z"),
-                            "end": _ts("2026-10-25T13:00:00Z")},
-        "updatedAt": _ts("2026-10-25T10:45:00Z"),
+        "scheduledWindow": {"start": _ago(hours=2),
+                            "end": _ago(minutes=0)},
+        "updatedAt": _ago(minutes=15),
     },
 ]
 
@@ -262,8 +268,8 @@ ORDERS: list[dict[str, Any]] = [
         "status": "HARDWARE_IN_TRANSIT_EXCEPTION",
         "statusDetails": ("DPD-88219-UK marked DAMAGED_IN_TRANSIT. Replacement "
                           "not yet dispatched."),
-        "createdAt": _ts("2026-10-18T09:00:00Z"),
-        "goLiveTarget": _ts("2026-10-23T00:00:00Z"),
+        "createdAt": _ago(days=5),
+        "goLiveTarget": _ago(hours=2),
     },
     {
         "_id": "ord_bt_bb_60011",
@@ -272,9 +278,9 @@ ORDERS: list[dict[str, Any]] = [
         "brand": "BT",
         "orderType": "NEW_PROVIDE_FTTP",
         "status": "ENGINEER_SCHEDULED",
-        "statusDetails": "Install scheduled 25/10 10:00-13:00.",
-        "createdAt": _ts("2026-10-20T14:00:00Z"),
-        "goLiveTarget": _ts("2026-10-25T13:00:00Z"),
+        "statusDetails": "Install scheduled today 10:00-13:00.",
+        "createdAt": _ago(days=5),
+        "goLiveTarget": _ago(minutes=0),
     },
 ]
 

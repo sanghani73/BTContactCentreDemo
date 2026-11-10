@@ -10,9 +10,14 @@
         "interactionSummary": [
           { "type": "string", "analyzer": "lucene.english" }
         ],
-        "entities.orderReferences":     { "type": "token" },
-        "entities.workOrderReferences": { "type": "token" },
-        "entities.serviceReferences":   { "type": "token" },
+        "entities": {
+          "type": "document",
+          "fields": {
+            "orderReferences":     { "type": "token" },
+            "workOrderReferences": { "type": "token" },
+            "serviceReferences":   { "type": "token" }
+          }
+        },
         "uprn":      { "type": "token" },
         "brand":     { "type": "token" },
         "createdAt": { "type": "date" }

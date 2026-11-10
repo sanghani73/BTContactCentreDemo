@@ -357,7 +357,7 @@
 
     <!-- 5. DATA MODEL IN PLAY -->
     <section>
-      <span class="eyebrow">The data model in play</span>
+      <span class="eyebrow">The data model in play for the demo</span>
       <h2>Six collections. One document per household on the hot path.</h2>
       <div class="grid-3" style="margin-top:20px">
         <div class="card">
@@ -421,7 +421,7 @@
     </section>
 
     <!-- 6. DEMO SCENARIO INTRO -->
-    <section>
+    <!-- <section>
       <span class="eyebrow">Live demo</span>
       <h2>Sarah Jenkins calls BT about her partner's broadband.</h2>
       <div class="grid-2" style="margin-top:20px">
@@ -451,7 +451,7 @@
         <span><span class="leaf">MongoDB</span>  ·  Live demo</span>
         <span>06 / 11</span>
       </div>
-    </section>
+    </section> -->
 
     <!-- 7. TECHNICAL ENGINE -->
     <section>
@@ -463,9 +463,9 @@
           <div class="row"><span>Agent 1 — CLI + C360 fetch</span><span class="ms">3 ms</span><span class="ms">7 ms</span></div>
           <div class="row"><span>Agent 2 — household expand</span><span class="ms">2 ms</span><span class="ms">5 ms</span></div>
           <div class="row"><span>Agent 3 — $rankFusion hybrid</span><span class="ms">230 ms</span><span class="ms">380 ms</span></div>
-          <div class="row"><span>Agent 4 — LLM first token</span><span class="ms">500 ms</span><span class="ms">900 ms</span></div>
+          <div class="row"><span>Agent 4 — LLM first token returned</span><span class="ms">500 ms</span><span class="ms">900 ms</span></div>
           <div class="row"><span>Agent 4 — briefing complete</span><span class="ms">1 400 ms</span><span class="ms">2 400 ms</span></div>
-          <div class="row total"><span>Total to actionable pop</span><span class="ms">1 635 ms</span><span class="ms">2 792 ms</span></div>
+          <div class="row total"><span>Total time to action</span><span class="ms">1 635 ms</span><span class="ms">2 792 ms</span></div>
         </div>
         <div>
           <h3>Core innovations</h3>
@@ -486,7 +486,7 @@
       <p class="footnote" style="margin-top:18px">
         <span class="pill ghost">Indicative</span>
         &nbsp;Latency figures are <strong>expected ranges</strong> for this demo on an
-        M-tier Atlas cluster with search nodes and Grove-fronted Haiku. Production
+        M-tier Atlas cluster with search nodes and low complexity model like Claude Haiku. Production
         numbers depend on cluster size, call volume and model choice.
       </p>
       <div class="footer">
@@ -519,13 +519,14 @@
             <td>Keyword &amp; semantic search</td>
             <td class="col-them">Two systems, two pipelines</td>
             <td class="col-them">External search add-on</td>
-            <td class="col-us">Single platform — <code>$rankFusion</code></td>
+            <td class="col-us">Hybrid search on a single platform</td>
           </tr>
           <tr>
             <td>Auto-embedding</td>
             <td class="col-them">DIY embedding service</td>
             <td class="col-them">DIY</td>
-            <td class="col-us"><strong>GA</strong> with Voyage AI</td>
+            <td class="col-us"><strong>Vectors created & indexed via CRUD ops</strong></td>
+            <!-- <td class="col-us"><strong>GA</strong> with Voyage AI</td> -->
           </tr>
           <tr>
             <td>Real-time materialization</td>
@@ -539,18 +540,18 @@
             <td class="col-them">Node/edge rigidity</td>
             <td class="col-us">Native (brand-specific fields)</td>
           </tr>
-          <tr>
+          <!-- <tr>
             <td>BT incumbent footprint</td>
             <td class="col-them">Partial</td>
             <td class="col-them">None</td>
             <td class="col-us">Profile Hub + Service Hub</td>
-          </tr>
-          <tr>
+          </tr> -->
+          <!-- <tr>
             <td>Vendors on the hot path</td>
             <td class="col-them">3+</td>
             <td class="col-them">2+</td>
             <td class="col-us">1</td>
-          </tr>
+          </tr> -->
         </tbody>
       </table>
       <div class="footer">

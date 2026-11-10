@@ -7,17 +7,22 @@
     "mappings": {
       "dynamic": false,
       "fields": {
-        "address.thoroughfareName": [
-          {
-            "type": "autocomplete",
-            "tokenization": "edgeGram",
-            "minGrams": 3,
-            "maxGrams": 15
+        "address": {
+          "type": "document",
+          "fields": {
+            "thoroughfareName": [
+              {
+                "type": "autocomplete",
+                "tokenization": "edgeGram",
+                "minGrams": 3,
+                "maxGrams": 15
+              }
+            ],
+            "postTown": { "type": "string" },
+            "postcode": { "type": "string" }
           }
-        ],
-        "address.postTown": { "type": "string" },
-        "address.postcode": { "type": "token" },
-        "uprn":             { "type": "token" }
+        },
+        "uprn": { "type": "token" }
       }
     }
   }

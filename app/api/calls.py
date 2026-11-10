@@ -17,6 +17,11 @@ router = APIRouter(prefix="/api")
 SCENARIOS: dict[str, dict[str, Any]] = {
     "sarah": {
         "label": "Scenario 1 — Sarah Jenkins (EE/BT household outage)",
+        "description": ("EE mobile customer calls about a broadband outage — but "
+                        "the broadband is her partner Mark's BT account. Tests "
+                        "cross-brand household linkage: the system must connect "
+                        "Sarah's EE profile to Mark's BT fault and surface the "
+                        "delayed Openreach engineer visit."),
         "cli": "+447700900123",
         "authState": "UNAUTH",
         "utterance": ("Hi, our home broadband is still completely down and the "
@@ -26,6 +31,11 @@ SCENARIOS: dict[str, dict[str, Any]] = {
     },
     "david": {
         "label": "Scenario 2 — David Patel (unregistered CLI, damaged migration)",
+        "description": ("Caller's phone number is not on file. The system must "
+                        "identify David from his spoken name and address using "
+                        "Atlas Search, then discover his Plusnet-to-EE migration "
+                        "order and the damaged router (DPD parcel marked "
+                        "DAMAGED_IN_TRANSIT)."),
         "cli": "+447700900888",
         "authState": "UNAUTH",
         "utterance": ("Hello, my name is David Patel from 27 Victoria Road in Leeds. "
@@ -36,6 +46,11 @@ SCENARIOS: dict[str, dict[str, Any]] = {
     },
     "priya": {
         "label": "Scenario 3 — Priya Shah (authenticated, cites work-order ref)",
+        "description": ("Authenticated caller quotes a specific work-order "
+                        "reference. Tests hybrid search with exact-match keyword "
+                        "boosting: the cited reference OR-2026-10044 should rank "
+                        "highest, and live WFM data shows the engineer is en "
+                        "route."),
         "cli": "+447700900777",
         "authState": "AUTH",
         "utterance": ("Hi, I'm calling about my install today, the reference is "

@@ -14,7 +14,7 @@ from app.services import mock_store
 async def post_call_write_back(
     call_id: str, ivr: IvrContext, briefing: Briefing, agent_notes: str = ""
 ) -> dict[str, Any]:
-    summary = f"{briefing.recommendedScript} {agent_notes}".strip()
+    summary = f"{briefing.callDriver} {agent_notes}".strip()
     doc = {
         "_id": f"int_voice_{call_id}",
         "uprn": briefing.householdUprn,
